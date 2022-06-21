@@ -1,0 +1,168 @@
+Library management system (CRUD)To
+ ● Add a Book
+● Update an entry of a book
+● Delete a book
+● Get all books
+Made this project using the knowledge i have and whatever I understood when I opened the pdf of the project, previously I tried to make this project I'm including some points from that as well.
+*As per keywordio policy this project is not copied.
+
+•Project features for admin 
+1-Admin can add new books
+2-View the whole list of books and delete any book
+3-View the whole list of students and delete any student
+4-Issue a book to a student
+5-View all the issued books
+I will be presenting steps for online library management system
+LET'S GET STARTED…
+
+def SignupBackend(request):
+    if request.method =='POST':
+            username = request.POST["username"]
+            fname=request.POST["fname"]
+            lname=request.POST["lname"]
+            email = request.POST["email"]
+            phone=request.POST['phone']
+            password=request.POST['password']
+            userprofile = UserExtend(phone=phone)
+            if request.method == 'POST':
+                try:
+                    UserExists = User.objects.get(username=request.POST['username'])
+                    messages.error(request," Username already taken, Try something else!!!")
+                    return redirect("staffsignup")    
+                except User.DoesNotExist:
+                    if len(uname)>10:
+                        messages.error(request," Username must be max 15 characters, Please try again")
+                        return redirect("staffsignup")
+            
+                    if not username.isalnum():
+                        messages.error(request," Username should only contain letters and numbers, Please try again")
+                        return redirect("staffsignup")
+            
+            # create the user
+            user = User.objects.create_user(username, email, password)
+            user.first_name=fname
+            user.last_name=lname
+            user.email = email
+            user.save()
+            userprofile.user = user
+            userprofile.save()
+            messages.success(request," Your account has been successfully created")
+            return redirect("stafflogin")
+    else:
+        return HttpResponse('404 - NOT FOUND ')
+def LoginBackend(request):
+    if request.method =='POST':
+        loginusername = request.POST["loginusername"]
+        loginpassword=request.POST["loginpassword"]
+        RegisteredUser = authenticate(username=loginusername, password=loginpassword)
+        if RegisteredUser is not None:
+            dj_login(request, RegisteredUser)
+            request.session['is_logged'] = True
+            RegisteredUser = request.user.id 
+            request.session["user_id"] = RegisteredUser
+            messages.success(request, " Successfully logged in")
+            return redirect('dashboardsucessfully')
+
+
+CODE EXPLANATION
+1-To sign up a person needs to enter the username, first name , last name , email , phone number and password.
+2-So it will check if a person is a registered user or not. If the person is registered he/she will be directed to the dashboard.if not it will show an error inshort you won't be able to login.
+
+
+
+addbook(request):
+    return render(request,addbook.html')
+def addbooksubmission(request):
+       if request.method=='POST':
+            user_id = request.session["user_id"]
+            user1 = User.objects.get(id=user_id)
+             book1=request.POST['book1']
+            store=AddBook.objects.filter(bookid=book1)
+            def get_category(addbook):
+                if addbook.category=="Not-added":
+                    addbook.category="Issued"
+                    obj= addBook(user=user1,userid=userid,book1=book1)
+                    obj.save()
+                    addbook.save()
+                else:
+                    messages.error(request," Book already added !!!")
+            category_list=list(set(map(get_category,store)))         
+            Add=addBook.objects.all()
+            return render(request,'bookadded.html',{'add':add})
+       return redirect('/')
+
+
+
+CODE EXPLANATION
+1-. Addbook() redirects the user to the page where the book can be added by entering the details of bookid and userid
+
+b. addbooksubmission() handles the backend of the form. It takes the information of bookid and userid and stores it in the database and also it changes the status of the book from Not-added to Issued in the database as well as in the table that is displayed on the dashboard.
+
+
+
+def retrivebook(request):
+    retrive render(request,'retrivebook.html')
+def retrivebooksubmission(request):
+    if request.method=='POST':
+            user_id = request.session["user_id"]
+            user1 = User.objects.get(id=user_id)
+            bookid2=request.POST['bookid2']
+            store1=AddBook.objects.filter(bookid=bookid2)
+            def retrive_book(retrivenbook):
+                if retrivebook.category=="Issued":
+                    retrivenbook.category="Not-Issued"
+                    obj1=RetriveBook(user=user1,bookid2=bookid2)
+                    obj=IssueBook.objects.filter(book1=bookid2)
+                    obj.delete()
+                    obj1.save()
+                    retrivebook.save()
+                else:
+                    messages.error(request," Book not  issued !!!")
+            retrivecategorylist=list(set(map(retrivs_book,store1)))
+            Retrive= Retri eBook.objects.all()
+            retrive render(request,'retrivebook.html',{'Retrive':Retrive})
+    retrive redirect('/')
+
+CODE EXPLANATION
+1- First function redirects the user to the page where the book can be retrived by entering the book id in pgm(bookid).
+2-and the second function handles the backend of the return book page. It stores the book id of the book that is returned in the database and also it changes the status of the book to Not-Issued in the database as well as in the table displayed on the dashboard.....
+
+
+def updatebookdetails(request,id):
+    if request.session.has_key('is_logged'):
+        Book = AddBook.objects.get(id=id)
+        return render(request,'updatedetails.html',{'Book':Book})
+    return redirect('login')
+ 
+def updatedetails(request,id):
+    if request.session.has_key('is_logged'):
+        if request.method=="POST":
+                add=AddBook.objects.get(id=id)
+                add.bookid=request.POST["bookid"]
+                add.bookname=request.POST["bookname"]
+                add.subject=request.POST["subject"]
+                add.ContactNumber=request.POST['category']
+                add.save()
+                return redirect("dashboard")
+    return redirect('login')
+
+
+CODE EXPLANATION
+1-The first function gets the details of the book which is to be updated and opens the update form.
+b. The second function stores the new details of the user in the database and updates the details in the table displayed on the dashboard.
+
+
+def deletebook(request,id):
+    if request.session.has_key('is_logged'):
+        AddBook_info = AddBook.objects.get(id=id)
+        AddBook_info.delete()
+        return redirect("dashboard")
+    return redirect("login")
+
+CODE EXPLANATION
+1-deletebook() deletes the details of the book that is added. If a user is logged in, the selected row will be deleted with the help of delete() and after deleting the user will be redirected to the dashboard.
+
+Here i end step by step explanation of my library management system program 
+
+
+
